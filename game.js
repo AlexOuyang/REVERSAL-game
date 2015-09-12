@@ -3,18 +3,19 @@
 *************************/
 
 // Water colors
-var color_1 = 'rgba(214, 255, 223, .9)';
-var color_2 = 'rgba(131, 245, 212, .9)';
-var color_3 = 'rgba(97, 205, 192, .9)';
-var color_4 = 'rgba(57, 165, 164, .9)';
-
 var colorPalette = {
     water: '#114B5F',
     background2: '#028090',
     player: '#F45B69',
-    random1: '#456990',
-    goal: '#E4FDE1',
-    background3: '#202224'
+    goal: 'rgba(255, 255, 255, 0.6)',
+    background3: '#202224',
+    treeTrunk: '#915961',
+    treeLeaf: '#63d8b1',
+    grass: ["#83b3ac", "#75a19a", "#688f89", "#5b7d78", "#8fbab4", "#9bc2bc", "#a8c9c4"],
+    background1: '#456990',
+    deathZone: 'rgba(0, 0, 0, .4)',
+    teleporterBackground: 'rgba(100, 170, 160, 0.2)',
+    teleporterBeam: 'rgba(244,91,105, 0.8)'
 }
 
 
@@ -117,7 +118,7 @@ player.prototype.updatePlayer = function () {
         // Detecting if the player touches the goal star, delete the tile 
         if (dir && platformTiles[i].tileType === 7) {
             platformTiles.splice(i, 1);
-            numOfCollectedGoals ++;
+            numOfCollectedGoals++;
         }
 
         if (gravity > 0) {
@@ -274,12 +275,12 @@ var platformTile = function (positionX, positionY, width, height, tileType) {
 
         if (tileType === 7) {
             this.isGoal = true;
-            var newHeight = this.height /2;
-            var newWidth = this.width /2;
+            var newHeight = this.height / 2;
+            var newWidth = this.width / 2;
             this.height = newHeight;
             this.width = newWidth;
-            this.x += newWidth/2;
-            this.y += newHeight/2;
+            this.x += newWidth / 2;
+            this.y += newHeight / 2;
         }
     }
 
@@ -305,10 +306,6 @@ platformTile.prototype.drawPlatformTile = function () {
     }
 
     // Draw the platform
-    //    var grad = context.createRadialGradient(this.x, this.y, 1, this.x, this.y, this.width * 2);
-    //    grad.addColorStop(0.2, color_2);
-    //    grad.addColorStop(.5, color_1);
-
     var grad = context.createRadialGradient(250, 450, 140, 250, 300, 600);
     grad.addColorStop(0, 'rgba(100, 170, 160, 0.6)');
     grad.addColorStop(0.1, 'rgba(100, 160, 160, 0.5)');
@@ -320,9 +317,9 @@ platformTile.prototype.drawPlatformTile = function () {
 
     context.fillStyle = grad;
 
-    if (this.isDeathZone) context.fillStyle = 'rgba(0, 0, 0, .4)'; // Color change for death zone tile
-    if (this.isTeleporter) context.fillStyle = 'rgba(100, 170, 160, 0.1)'; // Color change for teleporter tile
-    if (this.isGoal) context.fillStyle = 'rgba(255, 255, 255, 0.6)'; // Color change for teleporter tile
+    if (this.isDeathZone) context.fillStyle = colorPalette.deathZone; // Color change for death zone tile
+    if (this.isTeleporter) context.fillStyle = colorPalette.teleporterBackground; // Color change for teleporter tile
+    if (this.isGoal) context.fillStyle = colorPalette.goal; // Color change for teleporter tile
 
     context.beginPath();
     context.rect(this.x, this.y, this.width, this.height);
@@ -400,37 +397,6 @@ platformTile.prototype.createSpikes = function () {
     }
 }
 
-//platformTile.prototype.drawGoal = function () {
-//    var starDimension = this.width / 4;
-//    this.drawStar(5, this.x + 3 * this.width / 2, this.y + this.height / 2, starDimension, starDimension / 2, colorPalette.goal);
-//}
-//
-//// A helper function for drawGoal()
-//platformTile.prototype.drawStar = function (arms, x, y, outerVertexRadius, innerVertexRadius, color) {
-//
-//    var angle = (Math.PI / arms);
-//
-//    context.fillStyle = color;
-//    context.beginPath();
-//
-//    for (var i = 0; i < 2 * arms; i++) {
-//
-//        var r = (i & 1) ? innerVertexRadius : outerVertexRadius;
-//
-//
-//        var point_x = x + Math.cos(i * angle) * r;
-//        var point_y = y + Math.sin(i * angle) * r;
-//
-//        if (!i)
-//            context.moveTo(point_x + this.x, point_y + this.y);
-//        else
-//            context.lineTo(point_x + this.x, point_y + this.y);
-//    }
-//
-//    //    context.closePath();
-//    context.fill();
-//}
-
 
 /*****************************
      PLATFORM TILE SPIKES
@@ -438,12 +404,13 @@ platformTile.prototype.createSpikes = function () {
 var spike = function (positionX, positionY, width, height) {
     this.x = positionX;
     this.y = positionY;
+    this.color = colorPalette.spikes;
     this.width = width;
     this.height = height;
 }
 
 spike.prototype.draw = function () {
-    context.fillStyle = 'blue';
+    context.fillStyle = this.color;
     context.beginPath();
     context.rect(this.x, this.y, this.width, this.height);
     context.fill();
@@ -459,21 +426,20 @@ var tileGrass = function (positionX, positionY, width, height, color) {
     this.y = positionY;
     this.width = width;
     this.height = height;
-    this.color;
-    this.colorOptions = ["#83b3ac", "#75a19a", "#688f89", "#5b7d78", "#8fbab4", "#9bc2bc", "#a8c9c4"];
+    this.color = colorPalette.grass;
     this.wiggle = false;
     this.sections = [];
-    this.nSec = 20;
-    this.len = 250;
+    this.numOfSections = 20;
+    this.fixedLength = 250;
     this.loop = 0;
     this.init = function () {
         // Initialize the shape of the grass
-        for (var i = 0; i < this.nSec; i++) {
+        for (var i = 0; i < this.numOfSections; i++) {
             this.sections[i] = 0;
         }
 
         // Choose a random color for the grass at the begining
-        var randomColor = this.colorOptions[Math.floor(Math.random() * this.colorOptions.length)];
+        var randomColor = this.color[Math.floor(Math.random() * this.color.length)];
         this.color = randomColor;
     };
     this.init();
@@ -493,15 +459,15 @@ tileGrass.prototype.drawGrass = function () {
     context.fillStyle = this.color;
 
     context.beginPath();
-    var step = (this.len / this.nSec);
-    for (var i = 0; i < this.nSec; i++) {
+    var step = (this.fixedLength / this.numOfSections);
+    for (var i = 0; i < this.numOfSections; i++) {
         context.rotate(this.sections[i]);
-        context.lineTo(-(this.nSec - i), -step * i);
+        context.lineTo(-(this.numOfSections - i), -step * i);
     }
 
-    for (var i = this.nSec - 2; i >= 0; i--) {
+    for (var i = this.numOfSections - 2; i >= 0; i--) {
         context.rotate(-this.sections[i]);
-        context.lineTo((this.nSec - i), -step * i);
+        context.lineTo((this.numOfSections - i), -step * i);
     }
     context.fill();
     context.restore();
@@ -512,8 +478,8 @@ tileGrass.prototype.drawGrass = function () {
 
 tileGrass.prototype.update = function () {
     var i;
-    for (i = 0; i < this.nSec; i++) {
-        this.sections[i] = Math.sin((this.loop - (i * (50 / this.nSec))) / 20) / this.nSec;
+    for (i = 0; i < this.numOfSections; i++) {
+        this.sections[i] = Math.sin((this.loop - (i * (50 / this.numOfSections))) / 20) / this.numOfSections;
     }
     this.loop = (this.loop + 1) % (Math.PI * 360);
 };
@@ -531,11 +497,11 @@ var tileTree = function (positionX, positionY, width, height) {
     this.height = height;
     this.wiggle = false;
     this.sections = [];
-    this.nSec = 3;
-    this.len = 20;
+    this.numOfSections = 3;
+    this.fixedLength = 20;
     this.loop = 0;
     this.init = function () {
-        for (var i = 0; i < this.nSec; i++) {
+        for (var i = 0; i < this.numOfSections; i++) {
             this.sections[i] = 0;
         }
     };
@@ -545,21 +511,12 @@ var tileTree = function (positionX, positionY, width, height) {
 tileTree.prototype.drawLeafOnGrass = function () {
     context.save();
 
-    context.fillStyle = "#63d8b1";
-    var step = this.len / this.nSec;
-    //    for (var i = 0; i < this.nSec; i++) {
-    //        context.rotate(this.sections[i]);
-    //        if (i % 3 == 0) {
-    //            context.beginPath();
-    //            context.arc(-(this.nSec - i), -step * i, 10 - (i / 3), 0, Math.PI * 2, true);
-    //            context.fill();
-    //        }
-    //    }
-
+    context.fillStyle = colorPalette.treeLeaf;
+    var step = this.fixedLength / this.numOfSections;
     var i = 2;
     context.rotate(this.sections[i]);
     context.beginPath();
-    context.arc(-(this.nSec - i), -step * i, 10 - (i / 3), 0, Math.PI * 2, true);
+    context.arc(-(this.numOfSections - i), -step * i, 10 - (i / 3), 0, Math.PI * 2, true);
     context.fill();
     context.restore();
 }
@@ -574,17 +531,17 @@ tileTree.prototype.drawGrass = function () {
 
     context.restore();
     context.save();
-    context.fillStyle = "#915961";
+    context.fillStyle = colorPalette.treeTrunk;
     context.beginPath();
-    var step = this.len / this.nSec;
-    for (var i = 0; i < this.nSec; i++) {
+    var step = this.fixedLength / this.numOfSections;
+    for (var i = 0; i < this.numOfSections; i++) {
         context.rotate(this.sections[i]);
-        context.lineTo(-(this.nSec - i), -step * i);
+        context.lineTo(-(this.numOfSections - i), -step * i);
     }
 
-    for (var i = this.nSec - 2; i >= 0; i--) {
+    for (var i = this.numOfSections - 2; i >= 0; i--) {
         context.rotate(-this.sections[i]);
-        context.lineTo((this.nSec - i), -step * i);
+        context.lineTo((this.numOfSections - i), -step * i);
     }
     context.fill();
     context.restore();
@@ -596,65 +553,12 @@ tileTree.prototype.drawGrass = function () {
 
 tileTree.prototype.update = function () {
     var i;
-    for (i = 0; i < this.nSec; i++) {
-        this.sections[i] = Math.sin((this.loop - (i * (50 / this.nSec))) / 20) / this.nSec;
+    for (i = 0; i < this.numOfSections; i++) {
+        this.sections[i] = Math.sin((this.loop - (i * (50 / this.numOfSections))) / 20) / this.numOfSections;
     }
     this.loop = (this.loop + 1) % (Math.PI * 360);
 };
 
-
-
-/**************
-     RAIN
-**************/
-var rain = function (width, height, rainSpeed) {
-    this.width = width;
-    this.height = height;
-    this.rainArr = [50];
-    this.rainSpeed = rainSpeed;
-    this.createRain = function () {
-        this.rainArr = [];
-        for (var i = height - 1; i >= 0; i--) {
-            this.rainArr.push({
-                x: 1,
-                y: 0,
-                z: 0
-            });
-        }
-
-        for (var j = 0; j < height; j++) {
-            this.rainArr[j].x = Math.floor((Math.random() * 820) - 9);
-            this.rainArr[j].y = Math.floor((Math.random() * 520) - 9);
-            this.rainArr[j].z = Math.floor((Math.random() * 2) + 1);
-            this.rainArr[j].w = Math.floor((Math.random() * 3) + 2);
-        }
-    }
-    this.createRain();
-}
-
-rain.prototype.drawRain = function () {
-    for (var i = 0; i < this.height; i++) {
-        if (this.rainArr[i].y >= this.height) {
-            this.rainArr[i].y -= this.height;
-        }
-        if (this.rainArr[i].x < 0) {
-            this.rainArr[i].x += this.width;
-        } else {
-            this.rainArr[i].y += this.rainArr[i].w * this.rainSpeed;
-            this.rainArr[i].x -= 5 + Math.floor(this.rainArr[i].y / 2000) - this.rainArr[i].w;
-        }
-
-        var grad = context.createRadialGradient(250, 450, 140, 250, 300, 600);
-        grad.addColorStop(0.000, 'rgba(100, 170, 160, 0.3)');
-        grad.addColorStop(0.1, 'rgba(100, 160, 160, 0.4)');
-        grad.addColorStop(0.2, 'rgba(100, 150, 150, 0.3)');
-        //        grad.addColorStop(1, 'rgba(100, 140, 140, 0.1)');
-        grad.addColorStop(0.000, 'rgba(100, 170, 160, 0.3)');
-
-        context.fillStyle = grad;
-        context.fillRect(this.rainArr[i].x, this.rainArr[i].y, this.rainArr[i].z * 2, 9);
-    }
-}
 
 /*******************
 	   FLUID
@@ -681,7 +585,7 @@ var fluid = function (positionX, positionY, width, height) {
     this.numOfSprings = 200;
     this.width = width;
     this.height = height;
-    this.color = 'rgba(244,91,105, 0.8)';
+    this.color = colorPalette.teleporterBeam;
     this.waterSurfaceToFluidObjectTopOffset = 0;
     this.init = function () {
         for (var i = 0; i < this.numOfSprings; i++) {
@@ -780,9 +684,11 @@ var Input = {
     init: function () {
         window.addEventListener('keyup', function (event) {
             Input.onKeyup(event);
+            event.preventDefault(); // prevents the windows from scrolling due to arrow keys when playing the game
         }, true);
         window.addEventListener('keydown', function (event) {
             Input.onKeydown(event);
+            event.preventDefault();
         }, true);
     },
 
@@ -801,9 +707,6 @@ var Input = {
 
 Input.init();
 
-/**************************
-      
-**************************/
 
 
 
@@ -811,40 +714,36 @@ Input.init();
       HELPER FUNCTIONS
 **************************/
 
-// Helper Function for Updating the Player
-function collisionDetection(shapeA, shapeB) {
-    // get the vectors to check against
-    var vX = (shapeA.x + (shapeA.width / 2)) - (shapeB.x + (shapeB.width / 2));
-    var vY = (shapeA.y + (shapeA.height / 2)) - (shapeB.y + (shapeB.height / 2));
-    // add the half widths and half heights of the objects
-    var hWidths = (shapeA.width / 2) + (shapeB.width / 2);
-    var hHeights = (shapeA.height / 2) + (shapeB.height / 2);
-    var colDir = null;
-
-    // if the x and y vector are less than the half width or half height, they we must be inside the object, causing a collision
-    if (Math.abs(vX) < hWidths && Math.abs(vY) < hHeights) {
-        // figures out on which side we are colliding (top, bottom, left, or right)
-        var oX = hWidths - Math.abs(vX);
-        var oY = hHeights - Math.abs(vY);
+// Helper Function for Updating the Player, it checks which side of entityB is entityA collides on
+function collisionDetection(entityA, entityB) {
+    var collisionDirectionAtoB = null;
+    var vX = (entityA.x + (entityA.width / 2)) - (entityB.x + (entityB.width / 2));
+    var vY = (entityA.y + (entityA.height / 2)) - (entityB.y + (entityB.height / 2));
+    var collisionWidth = (entityA.width / 2) + (entityB.width / 2);
+    var collisionHeight = (entityA.height / 2) + (entityB.height / 2);
+    // Check shape overlapping
+    if (Math.abs(vX) < collisionWidth && Math.abs(vY) < collisionHeight) {
+        var oX = collisionWidth - Math.abs(vX);
+        var oY = collisionHeight - Math.abs(vY);
         if (oX >= oY) {
             if (vY > 0) {
-                colDir = "t";
-                shapeA.y += oY;
+                collisionDirectionAtoB = "t";
+                entityA.y += oY;
             } else {
-                colDir = "b";
-                shapeA.y -= oY;
+                collisionDirectionAtoB = "b";
+                entityA.y -= oY;
             }
         } else {
             if (vX > 0) {
-                colDir = "l";
-                shapeA.x += oX;
+                collisionDirectionAtoB = "l";
+                entityA.x += oX;
             } else {
-                colDir = "r";
-                shapeA.x -= oX;
+                collisionDirectionAtoB = "r";
+                entityA.x -= oX;
             }
         }
     }
-    return colDir;
+    return collisionDirectionAtoB;
 }
 
 /*************************
@@ -858,9 +757,8 @@ var gravity = 0.7;
 var goals = [];
 var platformTiles = [];
 var water = [];
-//var player = function (positionX, positionY, width, height, movingSpeed, jumpingSpeed) {
+//player param:  (positionX, positionY, width, height, movingSpeed, jumpingSpeed) {
 var player = new player(5, height - 70, 20, 20, 10, 10);
-var rainning = new rain(width, height, 2);
 
 
 /********************
@@ -908,21 +806,19 @@ window.onload = function () {
 	  UPDATE
 ******************/
 function update() {
-    //    rainning.drawRain();
-
     player.updatePlayer();
     player.drawPlayer();
 
     drawAllWater();
     drawAllPlatforms(); // draw the platform, as well as update the platform grass
-    
+
     detectingWinning();
 }
 
 function detectingWinning() {
-//    console.log("Total Number of Stars: " + totalNumOfGoals);
-//    console.log("Number of Stars Collected: " + numOfCollectedGoals);
-    if(totalNumOfGoals === numOfCollectedGoals) {
+    //    console.log("Total Number of Stars: " + totalNumOfGoals);
+    //    console.log("Number of Stars Collected: " + numOfCollectedGoals);
+    if (totalNumOfGoals === numOfCollectedGoals) {
         alert("Congrats! You Won!");
         window.location.reload();
     }
